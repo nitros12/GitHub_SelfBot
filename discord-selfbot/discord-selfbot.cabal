@@ -1,0 +1,23 @@
+name:                discord-selfbot
+version:             0.1.0.0
+synopsis:            My discord selfbot
+-- description:
+homepage:            https://github.com/nitros12/GitHub_SelfBot
+-- license:             z e r o l i c e n s e
+-- license-file:        Ye Whats this license you're talking about
+author:              Nitros
+maintainer:          ben@bensimms.moe
+-- copyright:           my asss
+category:            Bots
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
+
+executable discord-selfbot
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                       ,discord-hs==0.2.1
+                       ,text
+                       ,pipes
