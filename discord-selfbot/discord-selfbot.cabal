@@ -13,6 +13,10 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
+extra-prog-path: C:\Program Files\Haskell Platform\8.0.2\msys\usr\bin
+extra-lib-dirs: C:\Program Files\Haskell Platform\8.0.2\mingw\lib
+extra-include-dirs: C:\Program Files\Haskell Platform\8.0.2\mingw\include
+
 executable discord-selfbot
   hs-source-dirs:      src
   main-is:             Main.hs
@@ -21,3 +25,5 @@ executable discord-selfbot
                        ,discord-hs==0.2.1
                        ,text
                        ,pipes
+                       ,plugins==1.5.6.0
+                       ,process==1.4.3.0
