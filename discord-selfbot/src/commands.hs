@@ -56,9 +56,7 @@ pyeval code = do
     else return stderr
 
 testCommand :: String -> DiscordFunction
-testCommand rest msg = do
-  edit msg $ T.pack ("Hai " ++ rest)
-  liftIO $ putStrLn "test"
+testCommand rest msg = edit msg $ T.pack ("Hai " ++ rest)
 
 evalHandler :: String -> DiscordFunction
 evalHandler rest msg = do
