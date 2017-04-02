@@ -78,9 +78,7 @@ getEmoji char
   | otherwise = " "
 
 emojiFy :: String -> DiscordFunction
-emojiFy rest msg = do
-  edit msg $ T.pack (concatMap getEmoji rest)
+emojiFy rest msg = edit msg $ T.pack (concatMap getEmoji rest)
 
 testUp :: String -> DiscordFunction
-testUp rest msg = do
-  upload msg rest
+testUp rest msg = upload msg rest
