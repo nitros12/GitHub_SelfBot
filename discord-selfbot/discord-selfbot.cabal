@@ -13,17 +13,24 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
-extra-prog-path: C:\Program Files\Haskell Platform\8.0.2\msys\usr\bin
-extra-lib-dirs: C:\Program Files\Haskell Platform\8.0.2\mingw\lib
-extra-include-dirs: C:\Program Files\Haskell Platform\8.0.2\mingw\include
-
 executable discord-selfbot
   hs-source-dirs:      src
   main-is:             Main.hs
   default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5
+  build-depends:       base
                        ,discord-hs==0.2.1
+                       ,attoparsec==0.13.1.0
+                       ,containers==0.5.7.1
+                       ,bytestring==0.10.8.1
+                       ,process
                        ,text
                        ,pipes
-                       ,plugins==1.5.6.0
-                       ,process==1.4.3.0
+                       ,hint
+                       ,stm
+
+executable hseval
+  hs-source-dirs:     src
+  main-is:            Hseval.hs
+  default-language:   Haskell2010
+  build-depends:      base
+                      ,hint
