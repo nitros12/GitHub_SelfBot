@@ -16,6 +16,7 @@ import           Pipes
 import           System.Exit            (ExitCode (..))
 import           System.Process
 
+import           BrainFuck
 import           Shared
 
 numMap :: Map Char String
@@ -80,3 +81,6 @@ emojiFy rest msg = edit msg $ T.pack (concatMap getEmoji rest)
 
 testUp :: String -> DiscordFunction
 testUp rest msg = upload msg rest
+
+brainfuck :: String -> DiscordFunction
+brainfuck rest msg = edit msg $ T.pack ("BF input: ```bf\n" ++ rest ++ "```\nOutput:```\n" ++ processBF rest ++ "```")

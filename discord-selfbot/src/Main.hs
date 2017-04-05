@@ -33,6 +33,7 @@ messageHandler (command, args) msg = case command of
   "eval"    -> evalHandler args msg
   "emojify" -> emojiFy args msg
   "upload"  -> testUp args msg
+  "bf"      -> brainfuck args msg
   _         -> return ()
 
 main :: IO ()
