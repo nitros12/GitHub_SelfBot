@@ -106,7 +106,6 @@ runBF state@BFState{instructions=(Tape _ cur _), output = o} = runBF . advance $
   Put  -> put state
   Push -> push state
   Ret  -> ret state
-  Halt -> BFState {instructions=newTape Halt, tape = newTape 0, output=o}
   _    -> state
 
 processBF :: String -> String
