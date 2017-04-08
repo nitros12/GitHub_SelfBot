@@ -5,3 +5,5 @@ packages:
 extra-deps:
 - discord-hs-0.2.1
 resolver: lts-8.5
+ghc-options:
+  "*": -O2
