@@ -16,6 +16,7 @@ import           Pipes
 import           System.Exit            (ExitCode (..))
 import           System.Process
 
+import           Befunge
 import           BrainFuck
 import           Shared
 
@@ -84,3 +85,6 @@ testUp rest msg = upload msg rest
 
 brainfuck :: String -> DiscordFunction
 brainfuck rest msg = edit msg $ T.pack ("BF input: ```bf\n" ++ rest ++ "```\nOutput:```\n" ++ processBF rest ++ "```")
+
+befunge :: String -> DiscordFunction
+befunge rest msg = edit msg $ T.pack ("BeF input: ```befunge\n" ++ rest ++ "```\nOutput:```\n" ++ runBefunge rest ++ "```")

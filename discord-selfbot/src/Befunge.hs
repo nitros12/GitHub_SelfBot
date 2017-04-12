@@ -1,36 +1,14 @@
-module Befunge () where
+module Befunge (runBefunge) where
 
-data BefungeCmd = Add
-                | Sub
-                | Mul
-                | Div
-                | Mod
-                | Not
-                | Geq
-                | Pcr
-                | Pcl
-                | Pcu
-                | Pcd
-                | Hif
-                | Vif
-                | Tsm
-                | Dup
-                | Swp
-                | Pop
-                | PrInt
-                | PrChr
-                | Halt
-                | Brd
-                | Get
-                | Put
-                | Num' Int
-                | None deriving (Show)
+import           Data.Char (digitToInt)
+import           Data.List
+import           Data.Ord
 
-type BefungeArray = [[BefungeCmd]]
+type BefungeArray = [[Char]]
 
 type Vector = (Int, Int)
 
-data BFState = BFState { array      :: [[BefungeCmd]]
+data BFState = BFState { array      :: [[Char]]
                        , arrayPos   :: Vector
                        , spDir      :: Vector
                        , stack      :: [Int]
@@ -42,26 +20,25 @@ type BFUpdate = BFState -> BFState
 addvec :: Vector -> Vector -> Vector
 addvec (xa, ya) (xb, yb) = (xa+xb, ya+yb)
 
-getLeft :: Int -> [BefungeCmd] -> [BefungeCmd]
-getLeft s arr = case splitAt s arr of
-  (a, _) -> a
-  (_, _) -> []
+getLeft :: Int -> [a] -> [a]
+getLeft s arr = a
+  where (a, _) = splitAt s arr
 
-getMiddle :: Int -> [BefungeCmd] -> BefungeCmd
-getMiddle s arr = case maybeSplitAt s arr of
+getMiddle :: Int -> [a] -> a -> a
+getMiddle s arr default' = case splitAt s arr of
   (_, a:_) -> a
-  (_, [])  -> Halt -- Just get Halt if nothing
+  (_, [])  -> default' -- Just get Halt if nothing
 
 
-getRight :: Int -> [BefungeCmd] -> [BefungeCmd]
-getRight s arr = case maybeSplitAt s arr of
+getRight :: Int -> [a] -> [a]
+getRight s arr = case splitAt s arr of
    (_, _:a) -> a
-   (_, [])  -> Halt
+   (_, [])  -> []
 
-setPosition :: BefungeArray -> (Int, Int) -> Char -> BefungeArray -- (x, y)
-setPosition b (x, y) s = getLeft y b ++ [(getLeft x $ getMiddle y b) ++ [s] ++ (getRight x $ getMiddle y b)] ++ getRight y b
+setPosition :: [[Char]] -> (Int, Int) -> Char -> [[Char]] -- (x, y)
+setPosition b (x, y) s = getLeft y b ++ (getLeft x (getMiddle y b ([])) ++ s : getRight x (getMiddle y b ([]))) : getRight y b
 
-getPosition :: BefungeArray -> (Int, Int) -> Char
+getPosition :: [[Char]] -> (Int, Int) -> Char
 getPosition b (x, y) = b !! y !! x
 
 advance :: BFUpdate
@@ -95,7 +72,7 @@ pcr :: BFUpdate
 pcr state = state {spDir = (1, 0)}
 
 pcl :: BFUpdate
-pcr state = state {spDir = (-1, 0)}
+pcl state = state {spDir = (-1, 0)}
 
 pcu :: BFUpdate
 pcu state = state {spDir = (0, 1)}
@@ -122,88 +99,76 @@ pop :: BFUpdate
 pop state@BFState{stack = x:xs} = state {stack = xs}
 
 prInt :: BFUpdate
-prInt state@BFState{output = o, stack = x:_} = state {output = show x:o}
+prInt state@BFState{output = o, stack = x:xs} = state {output = show x ++ o, stack = xs}
 
 prChr :: BFUpdate
-prChr state@BFState{output = o, stack = x:_} = state {output = (toEnum x :: Char) : o}
+prChr state@BFState{output = o, stack = x:xs} = state {output = (toEnum x :: Char) : o, stack = xs}
 
 get :: BFUpdate
-get state@BFState{stack = y:x:xs, array=arr} = state {stack = getPosition arr (x, y):xs }
+get state@BFState{stack = y:x:xs, array=arr} = state {stack = (fromEnum $ getPosition arr (x, y)):xs}
 
 put :: BFUpdate
-put state@BFState{stack = y:x:xs, array=arr} = state {stack = xs, array = setPosition arr (x, y)}
+put state@BFState{stack = y:x:xs, array=arr} = state {stack = xs, array = setPosition arr (x, y) $ getPosition arr (x, y)}
 
-pushsk :: Int -> BFUpdate
-pushsk a state@BFState{stack=xs} = state {stack = a:xs}
+pushstk :: Int -> BFUpdate
+pushstk a state@BFState{stack=xs} = state {stack = a:xs}
+
+maxLength :: [String] -> Int
+maxLength = length . maximumBy (comparing length)
+
+rfill :: Int -> a -> [a] -> [a]
+rfill l c str = str ++ replicate (max 0 (l - length str)) c
+
+fixarr :: [String] -> [String]
+fixarr str = map (rfill l ' ') str
+  where l = maxLength str + 1
 
 newState :: BefungeArray -> BFState
-newState array = BFState {array = array
-                         ,arraypos = (0, 0)
+newState array = BFState {array = fixarr array
+                         ,arrayPos = (0, 0)
                          ,spDir = (1, 0)
-                         ,stack = []::[Int]
+                         ,stack = repeat 0::[Int]
                          ,stringMode = False
                          ,output = ""}
 
-getOP :: Char -> BFCmd
-getOP chr
-  | chr `elem` ['0'..'9'] = Num' (read chr :: Int)
-  | otherwise = case chr of
-    '+'       -> Add
-    '-'       -> Sub
-    '*'       -> Mul
-    '/'       -> Div
-    '%'       -> Mod
-    '!'       -> Not
-    '`'       -> Geq
-    '>'       -> Pcr
-    '<'       -> Pcl
-    '^'       -> Pcu
-    'v'       -> Pcd
-    '_'       -> Hif
-    '|'       -> Vif
-    '"'       -> Tsm
-    ':'       -> Dup
-    '\\'      -> Swp
-    '$'       -> Pop
-    '.'       -> PrInt
-    ','       -> PrChr
-    '#'       -> Brd
-    'g'       -> Get
-    'p'       -> Put
-    '@'       -> Halt
-    otherwise -> None
 
-parseBF :: [String] -> BefungeArray
-parseBF = map (map getOp)
+
+
+
+runInstance :: Char -> BFUpdate
+runInstance c state = case c of
+    '+'  -> add state
+    '-'  -> sub state
+    '*'  -> mul state
+    '/'  -> div' state
+    '%'  -> mod' state
+    '!'  -> not' state
+    '`'  -> geq state
+    '>'  -> pcr state
+    '<'  -> pcl state
+    '^'  -> pcu state
+    'v'  -> pcd state
+    '_'  -> hif state
+    '|'  -> vif state
+    ':'  -> dup state
+    '\\' -> swp state
+    '$'  -> pop state
+    '.'  -> prInt state
+    ','  -> prChr state
+    'g'  -> get state
+    'p'  -> put state
+    '#'  -> advance state
+    _    -> state
+
 
 runBF :: BFUpdate
-runBF state = case getPosition (array state) (arraypos state) of
-  Halt -> state
-  c -> runBF . advance $ case c of
-    Add    -> add state
-    Sub    -> sub state
-    Mul    -> mul state
-    Div    -> div' state
-    Mod    -> mod' state
-    Not    -> not' state
-    Geq    -> geq state
-    Pcr    -> pcr state
-    Pcl    -> pcl state
-    Pcu    -> pcu state
-    Pcd    -> pcd state
-    Hif    -> hif state
-    Vif    -> vif state
-    Tsm    -> tsm state
-    Dup    -> dup state
-    Swp    -> swp state
-    Pop    -> pop state
-    PrInt  -> prInt state
-    PrChr  -> prChr state
-    Get    -> get state
-    Put    -> put state
-    Brd    -> advance state
-    Num' a -> pushstk a state
-    None   -> state
+runBF state
+  | s == '"' = runBF . advance . tsm $ state
+  | stringMode state = runBF . advance $ pushstk  (fromEnum s) state
+  | s == '@' = state
+  | s `elem` ['0'..'9'] = runBF (advance (pushstk (digitToInt s) state))
+  | otherwise = runBF . advance $ runInstance s state
+  where s = getPosition (array state) (arrayPos state)
 
-processBF :: [String] -> String
-processBF inp = reverse $ output (runBF . newState . parseBF $ inp)
+runBefunge :: String -> String
+runBefunge inp = reverse $ output (runBF . newState . lines $ inp)
