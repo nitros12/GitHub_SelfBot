@@ -39,8 +39,7 @@ codeblock = do
       string "```"
       lang <- takeTill (== '\n')
       char '\n'
-      block <- takeTill (== '`')
-      string "```"
+      block <- T.pack <$> manyTill anyChar (string "```")
       return $ (lang, block)
 
 hseval :: String -> IO String
@@ -62,14 +61,17 @@ testCommand rest msg = edit msg $ T.pack ("Hai " ++ rest)
 
 evalHandler :: String -> DiscordFunction
 evalHandler rest msg = do
-  let (typ, code) = fromMaybe ("", "") (maybeResult $ parse codeblock (T.pack rest))
+  let (typ, code) = fromMaybe ("could_not_parse", "") (maybeResult $ parse codeblock (T.pack rest))
   res <- case typ of
-    "haskell" -> (liftIO . hseval $ T.unpack code)
-    "hs"      -> (liftIO . hseval $ T.unpack code)
-    "python"  -> (liftIO . pyeval $ T.unpack code)
-    "py"      -> (liftIO . pyeval $ T.unpack code)
-    _         -> return "Cannot eval this code"
-  reply msg $ T.pack ("```" ++ (T.unpack typ) ++ "\n" ++ res ++ "```")
+    "haskell"         -> (liftIO . hseval $ T.unpack code)
+    "hs"              -> (liftIO . hseval $ T.unpack code)
+    "python"          -> (liftIO . pyeval $ T.unpack code)
+    "py"              -> (liftIO . pyeval $ T.unpack code)
+    "bef"             -> return (runBefunge $ T.unpack code)
+    "bf"              -> return (processBF $ T.unpack code)
+    "could_not_parse" -> return "Cannot eval this code"
+    _                 -> return "Could not recognise language"
+  edit msg $ T.pack ("Input: " ++ rest ++ "Output: ```" ++ (T.unpack typ) ++ "\n" ++ res ++ "```")
 
 getEmoji :: Char -> String
 getEmoji char
@@ -82,9 +84,3 @@ emojiFy rest msg = edit msg $ T.pack (concatMap getEmoji rest)
 
 testUp :: String -> DiscordFunction
 testUp rest msg = upload msg rest
-
-brainfuck :: String -> DiscordFunction
-brainfuck rest msg = edit msg $ T.pack ("BF input: ```bf\n" ++ rest ++ "```\nOutput:```\n" ++ processBF rest ++ "```")
-
-befunge :: String -> DiscordFunction
-befunge rest msg = edit msg $ T.pack ("BeF input: ```befunge\n" ++ rest ++ "```\nOutput:```\n" ++ runBefunge rest ++ "```")
